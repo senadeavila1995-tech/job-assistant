@@ -18,7 +18,6 @@ def list_jobs(
     jobs = db.scalars(
         select(Job)
         .where(
-            Job.remote.is_(True),
             Job.is_active.is_(True),
         )
         .order_by(
@@ -43,12 +42,6 @@ def create_job(
     location: str | None = None,
     db: Session = Depends(get_db),
 ):
-    if not remote:
-        return {
-            "ok": False,
-            "message": "El sistema solo admite ofertas 100% remotas.",
-        }
-
     job = Job(
         title=title,
         company=company,
@@ -56,7 +49,7 @@ def create_job(
         url=url,
         description=description,
         salary=salary,
-        remote=True,
+        remote=remote,
         location=location,
         is_active=True,
     )

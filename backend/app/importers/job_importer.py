@@ -112,10 +112,8 @@ def import_job(
 
     data = normalize_job(data)
 
-    # Este sistema solo acepta ofertas 100% remotas.
-    if not data.remote:
-        return None, False
-
+    # La modalidad se conserva en la oferta.
+    # El filtro de modalidad se controla desde la aplicación.
     url_hash = generate_url_hash(data.url)
 
     existing = get_existing_job(db, url_hash)

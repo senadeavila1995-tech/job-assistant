@@ -3,6 +3,7 @@ import Swal from 'sweetalert2'
 import type { Application, Job, Match } from './types'
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [jobs, setJobs] = useState<Job[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [applications, setApplications] = useState<Application[]>([])
@@ -10,6 +11,7 @@ function App() {
 
   const [search, setSearch] = useState('')
   const [source, setSource] = useState('TODAS')
+  const [modality, setModality] = useState('REMOTAS')
   const [minScore, setMinScore] = useState(60)
   const [applicationFilter, setApplicationFilter] = useState('TODAS')
 
@@ -92,9 +94,14 @@ function App() {
 
         if (!job) return false
 
-        // El backend ya filtra remoto, pero mantenemos esta
-        // validación como segunda barrera en el frontend.
-        if (!job.remote || !job.is_active) return false
+        if (!job.is_active) return false
+
+        const matchesModality =
+          modality === 'TODAS'
+            ? true
+            : modality === 'REMOTAS'
+              ? job.remote
+              : !job.remote
 
         const matchesScore = match.score >= minScore
 
@@ -125,6 +132,7 @@ function App() {
           searchableText.includes(normalizedSearch)
 
         return (
+          matchesModality &&
           matchesScore &&
           matchesSource &&
           matchesApplication &&
@@ -137,6 +145,7 @@ function App() {
     jobMap,
     minScore,
     source,
+    modality,
     search,
     applicationFilter,
     appliedJobIds,
@@ -261,7 +270,7 @@ function App() {
             <div class="col-md-4">
               <div class="p-2 bg-light rounded">
                 <small class="text-muted d-block">Modalidad</small>
-                <strong>100% remoto</strong>
+                <strong>{job.remote ? '100% remoto' : 'No remoto'}</strong>
               </div>
             </div>
 
@@ -474,22 +483,169 @@ function App() {
           </span>
 
           <span className="text-white-50 small">
-            Ofertas 100% remotas
+            Panel inteligente de oportunidades
           </span>
         </div>
       </nav>
 
-      <main className="container-fluid px-3 px-lg-4 py-4">
+      
+      <div
+        className="sidebar-overlay"
+        onClick={() => setSidebarOpen(false)}
+      ></div>
 
-        <section className="hero-section mb-4">
+      <aside className={`app-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">JA</div>
+
+          {sidebarOpen && (
+            <div>
+              <div className="sidebar-title">Job Assistant</div>
+              <div className="sidebar-caption">Panel de empleo</div>
+            </div>
+          )}
+        </div>
+
+        <nav className="sidebar-nav">
+
+          <div className="sidebar-section-label">
+            {sidebarOpen ? 'PRINCIPAL' : '•'}
+          </div>
+
+          <button
+            type="button"
+            className="sidebar-item active"
+          >
+            <span className="sidebar-icon">⌂</span>
+            {sidebarOpen && <span>Dashboard</span>}
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={() => {
+              document
+                .getElementById('ofertas-section')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
+            <span className="sidebar-icon">▣</span>
+            {sidebarOpen && <span>Ofertas</span>}
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={() => {
+              setApplicationFilter('APLICADAS')
+              document
+                .getElementById('ofertas-section')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
+            <span className="sidebar-icon">✓</span>
+            {sidebarOpen && <span>Aplicadas</span>}
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={() => setApplicationFilter('PENDIENTES')}
+          >
+            <span className="sidebar-icon">◷</span>
+            {sidebarOpen && <span>Pendientes</span>}
+          </button>
+
+          <div className="sidebar-divider"></div>
+
+          <div className="sidebar-section-label">
+            {sidebarOpen ? 'HERRAMIENTAS' : '•'}
+          </div>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={loadData}
+          >
+            <span className="sidebar-icon">↻</span>
+            {sidebarOpen && <span>Actualizar</span>}
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={() => setModality('REMOTAS')}
+          >
+            <span className="sidebar-icon">⌁</span>
+            {sidebarOpen && <span>Solo remotas</span>}
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-item"
+            onClick={() => setModality('TODAS')}
+          >
+            <span className="sidebar-icon">⊞</span>
+            {sidebarOpen && <span>Todas las modalidades</span>}
+          </button>
+
+          <div className="sidebar-divider"></div>
+
+          <div className="sidebar-section-label">
+            {sidebarOpen ? 'ASISTENTES' : '•'}
+          </div>
+
+          <button
+            type="button"
+            className="sidebar-item sidebar-item-external"
+            onClick={() => {
+              window.open(
+                'http://127.0.0.1:5000',
+                '_blank',
+                'noopener,noreferrer'
+              )
+            }}
+            title="Abrir Gmail Assistant"
+          >
+            <span className="sidebar-icon">✉</span>
+            {sidebarOpen && (
+              <span className="sidebar-external-content">
+                <span>Gmail Assistant</span>
+                <small>Correos laborales</small>
+              </span>
+            )}
+          </button>
+
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="sidebar-footer-icon">●</div>
+
+          {sidebarOpen && (
+            <div>
+              <div className="sidebar-footer-title">
+                Asistente activo
+              </div>
+
+              <div className="sidebar-footer-text">
+                Monitoreando oportunidades
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+
+<main className="container-fluid px-3 px-lg-4 py-4">
+
+        <section id="ofertas-section" className="hero-section mb-4">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h1 className="h3 fw-bold mb-1">
-                Ofertas laborales
+                Panel de oportunidades laborales
               </h1>
 
               <p className="text-muted mb-0">
-                Oportunidades remotas ordenadas por compatibilidad con tu perfil.
+                Encuentra, analiza y gestiona oportunidades según la compatibilidad con tu perfil.
               </p>
             </div>
 
@@ -505,7 +661,7 @@ function App() {
         <section className="stats-grid">
 
           <div className="stat-card">
-            <span className="stat-label">Ofertas remotas</span>
+            <span className="stat-label">Ofertas activas</span>
             <strong>{jobs.length}</strong>
           </div>
 
@@ -526,28 +682,76 @@ function App() {
 
         </section>
 
-        <section className="filter-card mb-4">
+        <section className="filter-card professional-filter mb-4">
 
-          <div className="row g-3 align-items-end filters-grid">
+          <div className="filter-top">
 
-            <div className="col-12 col-lg-5">
-              <label className="form-label fw-semibold">
-                Buscar
-              </label>
+            <div className="filter-title-area">
+              <div className="filter-icon">
+                ⌕
+              </div>
 
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Cargo, empresa, tecnología..."
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-              />
+              <div>
+                <h2 className="filter-title">
+                  Buscar oportunidades
+                </h2>
+
+                <p className="filter-description">
+                  Filtra las ofertas según tus preferencias y compatibilidad.
+                </p>
+              </div>
             </div>
 
-            <div className="col-6 col-lg-2">
-              <label className="form-label fw-semibold">
+            <button
+              type="button"
+              className="filter-reset"
+              onClick={() => {
+                setSearch('')
+                setSource('TODAS')
+                setModality('REMOTAS')
+                setMinScore(60)
+                setApplicationFilter('TODAS')
+              }}
+            >
+              ↺ Restablecer
+            </button>
+
+          </div>
+
+          <div className="filter-search-wrapper">
+
+            <span className="filter-search-icon">
+              ⌕
+            </span>
+
+            <input
+              type="text"
+              className="form-control filter-search"
+              placeholder="Buscar por cargo, empresa, tecnología o palabra clave..."
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+            />
+
+            {search && (
+              <button
+                type="button"
+                className="filter-search-clear"
+                onClick={() => setSearch('')}
+              >
+                ×
+              </button>
+            )}
+
+          </div>
+
+          <div className="filter-controls">
+
+            <div className="filter-control">
+
+              <label>
+                <span>◉</span>
                 Fuente
               </label>
 
@@ -564,30 +768,34 @@ function App() {
                   </option>
                 ))}
               </select>
+
             </div>
 
-            <div className="col-6 col-lg-2">
-              <label className="form-label fw-semibold">
-                Score mínimo
+            <div className="filter-control">
+
+              <label>
+                <span>⌁</span>
+                Modalidad
               </label>
 
               <select
                 className="form-select"
-                value={minScore}
+                value={modality}
                 onChange={(event) =>
-                  setMinScore(Number(event.target.value))
+                  setModality(event.target.value)
                 }
               >
-                <option value={0}>Todos</option>
-                <option value={60}>60+</option>
-                <option value={70}>70+</option>
-                <option value={80}>80+</option>
-                <option value={90}>90+</option>
+                <option value="TODAS">Todas</option>
+                <option value="REMOTAS">Solo remotas</option>
+                <option value="NO_REMOTAS">No remotas</option>
               </select>
+
             </div>
 
-            <div className="col-12 col-lg-3">
-              <label className="form-label fw-semibold">
+            <div className="filter-control">
+
+              <label>
+                <span>✓</span>
                 Aplicación
               </label>
 
@@ -602,6 +810,65 @@ function App() {
                 <option value="PENDIENTES">Pendientes</option>
                 <option value="APLICADAS">Aplicadas</option>
               </select>
+
+            </div>
+
+            <div className="filter-control">
+
+              <div className="score-label">
+
+                <label>
+                  <span>★</span>
+                  Compatibilidad mínima
+                </label>
+
+                <strong>
+                  {minScore === 0 ? 'Todos' : `${minScore}%+`}
+                </strong>
+
+              </div>
+
+              <select
+                className="form-select"
+                value={minScore}
+                onChange={(event) =>
+                  setMinScore(Number(event.target.value))
+                }
+              >
+                <option value={0}>Todos los resultados</option>
+                <option value={60}>60% o más</option>
+                <option value={70}>70% o más</option>
+                <option value={80}>80% o más</option>
+                <option value={90}>90% o más</option>
+              </select>
+
+            </div>
+
+          </div>
+
+          <div className="filter-bottom">
+
+            <div className="active-filter-status">
+              <span className="active-filter-dot"></span>
+              Filtros activos
+            </div>
+
+            <div className="filter-summary">
+              Modalidad:
+              <strong>
+                {modality === 'REMOTAS'
+                  ? ' Solo remotas'
+                  : modality === 'NO_REMOTAS'
+                    ? ' No remotas'
+                    : ' Todas'}
+              </strong>
+
+              <span className="filter-separator">•</span>
+
+              Score:
+              <strong>
+                {minScore === 0 ? ' Todos' : ` ${minScore}%+`}
+              </strong>
             </div>
 
           </div>
